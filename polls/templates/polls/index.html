@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>CSB Project 1</title>
+    </head>
+    <body>
+      {% if latest_question_list %}
+        <ul>
+          {% for question in latest_question_list %}
+            <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+          <p>No polls are available.</p>
+      {% endif %}  
+    </body>
+</html>
