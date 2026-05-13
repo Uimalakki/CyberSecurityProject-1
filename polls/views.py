@@ -1,12 +1,15 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.contrib.auth.decorators import login_required
 from django.template import loader
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Question, Choice
 
 # Create your views here.
 
+@login_required
 def index(request):
   latest_question_list = Question.objects.order_by('-pub_date')[:5]
   context = {
@@ -21,6 +24,15 @@ def detail(request, question_id):
     raise Http404("Question does not exist")
   return render(request, 'polls/detail.html', {'question': question})
 
+def add(request):
+  if(request.method == 'POST'):
+    print(request.POST)
+    question = request.POST.get('question')
+    new_question = Question.objects.create(question_text=question, pub_date=timezone.now())
+    new_question.save()
+
+  return redirect('/')
+
 def results(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
   return render(request, 'polls/results.html', {'question': question})
@@ -32,7 +44,7 @@ def vote(request, question_id):
   except (KeyError, Choice.DoesNotExist):
     return render(request, 'polls/detail.html', {
       'question': question,
-      'error_message': "You didn't selece a choice.",
+      'error_message': "You didn't select a choice.",
     })
   else:
     selected_choice.votes += 1

@@ -1,9 +1,27 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>CSB Project 1</title>
+        <title>CSB Project 1 - home</title>
     </head>
     <body>
+      <table>
+		    <tr>
+		      <th style="text-align:left">Username: <td>{{user.username}} 
+		  </table>
+
+      <form action='logout/' method="POST">
+			{% csrf_token %}
+          <input type="submit" value="Logout"/>
+      </form>
+
+      <h4>Add new question:</h4>
+      <form action="add/" method="POST">
+        {% csrf_token %}
+        <input type="text" name="question"/>
+        <button type="submit">Add</button>
+      </form>
+
+      <h4>List of questions:</h4>
       {% if latest_question_list %}
         <ul>
           {% for question in latest_question_list %}
