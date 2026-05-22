@@ -1,35 +1,66 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <title>CSB Project 1 - home</title>
-    </head>
-    <body>
-      <table>
-		    <tr>
-		      <th style="text-align:left">Username: <td>{{user.username}} 
-		  </table>
+  <head>
+    <title>CSB Project 1 - home</title>
+  </head>
+  <body>
+    <table>
+      <tr>
+        <th style="text-align: left">Username:</th>
+        <td>{{ user.username }}</td>
+      </tr>
+    </table>
 
-      <form action='logout/' method="POST">
-			{% csrf_token %}
-          <input type="submit" value="Logout"/>
-      </form>
+    <form action="logout/" method="POST">
+      {% csrf_token %}
+      <input type="submit" value="Logout" />
+    </form>
 
-      <h4>Add new question:</h4>
-      <form action="add/" method="POST">
-        {% csrf_token %}
-        <input type="text" name="question"/>
-        <button type="submit">Add</button>
-      </form>
+    <h4>Add new question:</h4>
+    <form action="add/" method="POST">
+      {% csrf_token %}
+      <input type="text" name="question" />
+      <!-- A01: Broken Access Control -->
+      <input type="hidden" name="user_id" value={{ user.id }} /> 
+      <!-- A01: Broken Access Control -->
+      <button type="submit">Add</button>
+    </form>
 
-      <h4>List of questions:</h4>
-      {% if latest_question_list %}
-        <ul>
-          {% for question in latest_question_list %}
-            <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
-          {% endfor %}
-        </ul>
-        {% else %}
-          <p>No polls are available.</p>
-      {% endif %}  
-    </body>
+    <h4>List of questions:</h4>
+    <h5>Flaw 1 Broken Access Control (A01)</h5>
+    <p>Anyone who knows or guesses the ID can delete any question.</p>
+    {% if latest_question_list %}
+    <ul>
+      {% for question in latest_question_list %}
+      <li>
+        <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+        {% if user == question.user %}  
+          <a href="{% url 'polls:flaw_one_delete' question.id %}">Delete</a>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No polls are available.</p>
+    {% endif %}
+
+    <h5>Flaw 1 fix</h5>
+    {% if latest_question_list %}
+    <ul>
+      {% for question in latest_question_list %}
+      <li>
+        <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+        {% if user == question.user %}  
+          <form action="{% url 'polls:flaw_one_delete' question.id %}" method="POST" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+          </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>No polls are available.</p>
+    {% endif %}
+  </body>
 </html>

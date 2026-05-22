@@ -1,7 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
-from django.template import loader
 from django.urls import reverse
 from django.utils import timezone
 
@@ -28,7 +27,7 @@ def add(request):
   if(request.method == 'POST'):
     print(request.POST)
     question = request.POST.get('question')
-    new_question = Question.objects.create(question_text=question, pub_date=timezone.now())
+    new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
     new_question.save()
 
   return redirect('/')
@@ -51,4 +50,18 @@ def vote(request, question_id):
     selected_choice.save()
 
     return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
-    
+  
+def flaw_one_delete(request, question_id):
+  Question.objects.get(id=question_id).delete()
+  return redirect('polls:index')
+
+def flaw_one_delete_fix(request, question_id):
+
+  deleted_question = get_object_or_404(Question, pk=question_id)
+
+  if deleted_question.user == request.user:
+    deleted_question.delete()
+    return redirect('polls:index')
+  else:
+    return HttpResponseForbidden("You don't have permission to delete this question")
+  
