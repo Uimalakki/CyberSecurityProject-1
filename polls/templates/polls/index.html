@@ -26,6 +26,16 @@
       <button type="submit">Add</button>
     </form>
 
+    <h4>Flaw three injection:</h4>
+    <form action="flaw_three_injection/" method="POST">
+      {% csrf_token %}
+      <input type="text" name="question" />
+      <!-- A01: Broken Access Control -->
+      <input type="hidden" name="user_id" value={{ user.id }} /> 
+      <!-- A01: Broken Access Control -->
+      <button type="submit">Add</button>
+    </form>
+
     <h4>List of questions:</h4>
     <h5>Flaw 1 Broken Access Control (A01)</h5>
     <p>Anyone who knows or guesses the ID can delete any question.</p>
@@ -51,7 +61,7 @@
       <li>
         <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
         {% if user == question.user %}  
-          <form action="{% url 'polls:flaw_one_delete' question.id %}" method="POST" style="display: inline;">
+          <form action="{% url 'polls:flaw_one_delete_fix' question.id %}" method="POST" style="display: inline;">
             {% csrf_token %}
             <button type="submit">Delete</button>
           </form>

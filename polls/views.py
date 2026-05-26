@@ -3,6 +3,8 @@ from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.utils import timezone
+from django.db import connection
+import sqlite3
 
 from .models import Question, Choice
 
@@ -31,6 +33,19 @@ def add(request):
     new_question.save()
 
   return redirect('/')
+
+def flaw_three_add_injection(request):
+  if request.method == 'POST':
+    question = request.POST.get("question")
+    print(question)
+    conn = sqlite3.connect('db.sqlite3')
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM polls_question")
+    print(cursor.fetchall())
+
+  return redirect('/')
+
 
 def results(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
