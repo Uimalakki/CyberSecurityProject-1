@@ -37,12 +37,18 @@ def add(request):
 def flaw_three_add_injection(request):
   if request.method == 'POST':
     question = request.POST.get("question")
-    print(question)
     conn = sqlite3.connect('db.sqlite3')
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM polls_question")
-    print(cursor.fetchall())
+    cursor.execute("SELECT COUNT(*) FROM polls_question")
+    question_id = int(cursor.fetchone()[0]) + 1
+    new_date = '2026-05-27'
+    user_id = request.user.id
+
+    cursor.execute(f"INSERT INTO polls_question VALUES ({question_id}, '{question}', '{new_date}', {user_id})")
+    
+    conn.commit()
+    conn.close()
 
   return redirect('/')
 
