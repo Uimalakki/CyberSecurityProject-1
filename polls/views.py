@@ -3,12 +3,20 @@ from django.http import Http404, HttpResponseForbidden, HttpResponseRedirect
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.utils import timezone
-from django.db import connection
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 import sqlite3
 
 from .models import Question, Choice
 
 # Create your views here.
+
+def user_exists(username):
+  if User.objects.filter(username=username).exists():
+    return True
+  else:
+    return False
 
 @login_required
 def index(request):
@@ -18,12 +26,19 @@ def index(request):
   }
   return render(request, 'polls/index.html', context)
 
-def detail(request, question_id):
-  try:
-    question = Question.objects.get(pk=question_id)
-  except Question.DoesNotExist:
-    raise Http404("Question does not exist")
-  return render(request, 'polls/detail.html', {'question': question})
+def flaw_one_delete(request, question_id):
+  Question.objects.get(id=question_id).delete()
+  return redirect('polls:index')
+
+def flaw_one_delete_fix(request, question_id):
+
+  deleted_question = get_object_or_404(Question, pk=question_id)
+
+  if deleted_question.user == request.user:
+    deleted_question.delete()
+    return redirect('polls:index')
+  else:
+    return HttpResponseForbidden("You don't have permission to delete this question")
 
 def add(request):
   if(request.method == 'POST'):
@@ -52,6 +67,40 @@ def flaw_three_add_injection(request):
 
   return redirect('/')
 
+def flaw_four_add_new_user(request):
+  if request.method == 'POST':
+    username = request.POST.get("username")
+    password = request.POST.get('password')
+
+    if user_exists(username):
+      return HttpResponseForbidden("Username already exists")
+
+    User.objects.create_user(username=username, password=password)
+    return redirect('polls:index')
+
+  return render(request, 'polls/register_flaw.html')
+
+def flaw_four_fix_add_new_user(request):
+  if request.method == 'POST':
+    username = request.POST.get("username")
+    password = request.POST.get('password')
+
+    try:
+      validate_password(password)
+    except ValidationError as e:
+      return HttpResponseForbidden(", ".join(e.messages))
+
+    User.objects.create_user(username=username, password=password)
+    return redirect('polls:index')
+   
+  return render(request, 'polls/register_fixed.html')
+
+def detail(request, question_id):
+  try:
+    question = Question.objects.get(pk=question_id)
+  except Question.DoesNotExist:
+    raise Http404("Question does not exist")
+  return render(request, 'polls/detail.html', {'question': question})
 
 def results(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
@@ -72,17 +121,5 @@ def vote(request, question_id):
 
     return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
   
-def flaw_one_delete(request, question_id):
-  Question.objects.get(id=question_id).delete()
-  return redirect('polls:index')
 
-def flaw_one_delete_fix(request, question_id):
-
-  deleted_question = get_object_or_404(Question, pk=question_id)
-
-  if deleted_question.user == request.user:
-    deleted_question.delete()
-    return redirect('polls:index')
-  else:
-    return HttpResponseForbidden("You don't have permission to delete this question")
   
