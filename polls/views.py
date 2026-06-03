@@ -27,22 +27,26 @@ def index(request):
   return render(request, 'polls/index.html', context)
 
 def flaw_one_delete(request, question_id):
+
+  #Fix to the flaw 2:
+  #if request.method != "POST":
+  #  return HttpResponseForbidden()
+  
   Question.objects.get(id=question_id).delete()
+
+  # Fix to the flaw 1:
+  #deleted_question = get_object_or_404(Question, pk=question_id)
+  #if deleted_question.user == request.user:
+  # deleted_question.delete()
+  # return redirect('polls:index')
+  #else:
+  # return HttpResponseForbidden("You don't have permission to delete this question")
+
   return redirect('polls:index')
-
-def flaw_one_delete_fix(request, question_id):
-
-  deleted_question = get_object_or_404(Question, pk=question_id)
-
-  if deleted_question.user == request.user:
-    deleted_question.delete()
-    return redirect('polls:index')
-  else:
-    return HttpResponseForbidden("You don't have permission to delete this question")
 
 def add(request):
   if(request.method == 'POST'):
-    print(request.POST)
+    
     question = request.POST.get('question')
     new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
     new_question.save()
@@ -65,26 +69,39 @@ def flaw_three_add_injection(request):
     conn.commit()
     conn.close()
 
+    # Fix to flaw 3
+    #new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
+    #new_question.save()
+
   return redirect('/')
 
-def flaw_four_add_new_user(request):
+def add_new_user(request):
   if request.method == 'POST':
     username = request.POST.get("username")
     password = request.POST.get('password')
 
     if user_exists(username):
       return HttpResponseForbidden("Username already exists")
+    
+    # Fix to flaw 4:
+    #try:
+    #  validate_password(password)
+    #except ValidationError as e:
+    #  return HttpResponseForbidden(", ".join(e.messages))
 
     User.objects.create_user(username=username, password=password)
     return redirect('polls:index')
 
-  return render(request, 'polls/register_flaw.html')
+  return render(request, 'polls/register.html')
 
 def flaw_four_fix_add_new_user(request):
   if request.method == 'POST':
     username = request.POST.get("username")
     password = request.POST.get('password')
 
+    if user_exists(username):
+      return HttpResponseForbidden("Username already exists")
+    
     try:
       validate_password(password)
     except ValidationError as e:

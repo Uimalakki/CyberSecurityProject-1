@@ -20,9 +20,7 @@
     <form action="add/" method="POST">
       {% csrf_token %}
       <input type="text" name="question" />
-      <!-- A01: Broken Access Control -->
       <input type="hidden" name="user_id" value={{ user.id }} /> 
-      <!-- A01: Broken Access Control -->
       <button type="submit">Add</button>
     </form>
 
@@ -30,22 +28,24 @@
     <form action="flaw_three_injection/" method="POST">
       {% csrf_token %}
       <input type="text" name="question" />
-      <!-- A01: Broken Access Control -->
       <input type="hidden" name="user_id" value={{ user.id }} /> 
-      <!-- A01: Broken Access Control -->
       <button type="submit">Add</button>
     </form>
 
-    <h4>List of questions: (Flaw 1 Broken Access Control A01)</h4>
-    <h5></h5>
-    <p>Anyone who knows or guesses the ID can delete any question.</p>
+    <h4>List of questions:</h4>
     {% if latest_question_list %}
     <ul>
       {% for question in latest_question_list %}
       <li>
         <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
         {% if user == question.user %}  
-          <a href="{% url 'polls:flaw_one_delete' question.id %}">Delete</a>
+          <a href="{% url 'polls:delete' question.id %}">Delete</a>
+          <!-- Fix to the flaw 2
+           <form action="{% url 'polls:flaw_one_delete_fix' question.id %}" method="POST" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+          </form>
+          -->
         {% endif %}
       </li>
       {% endfor %}
@@ -54,6 +54,7 @@
     <p>No polls are available.</p>
     {% endif %}
 
+    <!-- 
     <h4>List of questions: (Flaw 1 fix)</h4>
     {% if latest_question_list %}
     <ul>
@@ -69,7 +70,8 @@
       </li>
       {% endfor %}
     </ul>
-    {% else %}
+    {% else %} -->
+
     <p>No polls are available.</p>
     {% endif %}
   </body>
