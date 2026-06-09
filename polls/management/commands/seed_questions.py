@@ -4,17 +4,14 @@ from django.utils import timezone
 
 from polls.models import Question
 
-
 class Command(BaseCommand):
-  help = "Create demo users and questions"
+  help = "Create demo questions"
 
   def handle(self, *args, **kwargs):
-    if User.objects.exists():
-      self.stdout.write("Demo data already exists")
-      return
+    maureen = User.objects.get(username="maureen")
+    john = User.objects.get(username="john")
 
-    john = User.objects.create_user(username='john', password='password49')
-    maureen = User.objects.create_user(username='maureen', password='password49')
+    Question.objects.all().delete()
 
     Question.objects.create(
       question_text="Favorite movie?",
@@ -39,4 +36,4 @@ class Command(BaseCommand):
       user=maureen
     )
 
-    self.stdout.write(self.style.SUCCESS("Demo data created"))
+    self.stdout.write(self.style.SUCCESS("Demo questions created"))
