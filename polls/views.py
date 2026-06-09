@@ -6,11 +6,22 @@ from django.utils import timezone
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, login
 import sqlite3
+from django.core.cache import cache
 
 from .models import Question, Choice
 
 # Create your views here.
+
+def rate_limiter(key, limit=5, period=60):
+  count = cache.get(key, 0)
+
+  if count >= limit:
+    return False
+  
+  cache.set(key, count + 1, period)
+  return True
 
 def user_exists(username):
   if User.objects.filter(username=username).exists():
@@ -28,39 +39,44 @@ def index(request):
 
 def flaw_one_delete(request, question_id):
 
-  #Fix to the flaw 2:
+  # =============================
+  # Fix to the flaw 2 2/2
+  # ============================= 
+  # uncomment lines 47 and 48
+
   #if request.method != "POST":
-  #  return HttpResponseForbidden()
-  
-  Question.objects.get(id=question_id).delete()
+  # return HttpResponseForbidden()
 
+  # =============================
   # Fix to the flaw 1:
-  #deleted_question = get_object_or_404(Question, pk=question_id)
-  #if deleted_question.user == request.user:
-  # deleted_question.delete()
-  # return redirect('polls:index')
-  #else:
-  # return HttpResponseForbidden("You don't have permission to delete this question")
+  # ============================= 
+  # uncomment lines 55 - 60 and comment lines 62 and 63
 
-  return redirect('polls:index')
+  # deleted_question = get_object_or_404(Question, pk=question_id)
+  # if deleted_question.user == request.user:
+  #   deleted_question.delete()
+  #   return redirect('polls:index')
+  # else:
+  #   return HttpResponseForbidden("You don't have permission to delete this question")
 
-def add(request):
-  if(request.method == 'POST'):
-    
-    question = request.POST.get('question')
-    new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
-    new_question.save()
+  Question.objects.get(id=question_id).delete() # comment this line when fix to flaw 1 is impelemented
+  return redirect('polls:index') # comment this line when fix to flaw 1 is impelemented
 
-  return redirect('/')
 
-def flaw_three_add_injection(request):
+def add_question(request):
   if request.method == 'POST':
+
     question = request.POST.get("question")
+    # =============================
+    # Flaw 3: SQL Injection
+    # ============================= 
+    # Comment lines from 83 to 94 when fix to the flaw 3 is implemented
+
     conn = sqlite3.connect('db.sqlite3')
     cursor = conn.cursor()
 
     cursor.execute("SELECT COUNT(*) FROM polls_question")
-    question_id = int(cursor.fetchone()[0]) + 1
+    question_id = int(cursor.fetchone()[0] or 0) + 1
     new_date = '2026-05-27'
     user_id = request.user.id
 
@@ -69,9 +85,13 @@ def flaw_three_add_injection(request):
     conn.commit()
     conn.close()
 
+    # =============================
     # Fix to flaw 3
-    #new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
-    #new_question.save()
+    # ============================= 
+    # uncomment the lines 101 and 102
+
+    # new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
+    # new_question.save()
 
   return redirect('/')
 
@@ -82,8 +102,15 @@ def add_new_user(request):
 
     if user_exists(username):
       return HttpResponseForbidden("Username already exists")
-    
-    # Fix to flaw 4:
+    # =============================
+    # Flaw 4: Identification and Authentication Failures
+    # ============================= 
+
+    # =============================
+    # Fix to flaw 4
+    # ============================= 
+    # uncomment the lines 122 - 125
+
     #try:
     #  validate_password(password)
     #except ValidationError as e:
@@ -93,24 +120,6 @@ def add_new_user(request):
     return redirect('polls:index')
 
   return render(request, 'polls/register.html')
-
-def flaw_four_fix_add_new_user(request):
-  if request.method == 'POST':
-    username = request.POST.get("username")
-    password = request.POST.get('password')
-
-    if user_exists(username):
-      return HttpResponseForbidden("Username already exists")
-    
-    try:
-      validate_password(password)
-    except ValidationError as e:
-      return HttpResponseForbidden(", ".join(e.messages))
-
-    User.objects.create_user(username=username, password=password)
-    return redirect('polls:index')
-   
-  return render(request, 'polls/register_fixed.html')
 
 def detail(request, question_id):
   try:
@@ -126,7 +135,7 @@ def results(request, question_id):
 def vote(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
   try:
-    selected_choice = question.choice_set.get(pk=request.POST['choice'])
+    selected_choice = question.choice_set.get(pk=request.POST['choice']) # type: ignore
   except (KeyError, Choice.DoesNotExist):
     return render(request, 'polls/detail.html', {
       'question': question,
@@ -139,4 +148,35 @@ def vote(request, question_id):
     return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
   
 
+def login_user(request):
+
+  if request.method == 'POST':
+    username = request.POST.get("username")
+    key = f"login-{username}"
+
+    # =============================
+    # Fix to flaw 5
+    # ============================= 
+    # uncomment the lines 170 - 173
+
+    # if not rate_limiter(key, limit=3, period=60):
+    #   return HttpResponseForbidden(
+    #     "Too many login attempts. Try again later."
+    #   )
+    
+    password = request.POST.get('password')
+    user = authenticate(request, username=username, password=password)
+
+    if user is not None:
+      login(request, user)
+      cache.delete(key)
+
+      return redirect('polls:index')
+    
+    return render(
+      request,
+      "polls/login.html",
+      {"error": "Invalid username or password"}
+    )
+  return render(request, 'polls/login.html')
   

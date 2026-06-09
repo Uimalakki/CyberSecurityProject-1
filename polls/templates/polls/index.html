@@ -17,15 +17,7 @@
     </form>
 
     <h4>Add new question:</h4>
-    <form action="add/" method="POST">
-      {% csrf_token %}
-      <input type="text" name="question" />
-      <input type="hidden" name="user_id" value={{ user.id }} /> 
-      <button type="submit">Add</button>
-    </form>
-
-    <h4>Flaw three injection:</h4>
-    <form action="flaw_three_injection/" method="POST">
+    <form action="add_question/" method="POST">
       {% csrf_token %}
       <input type="text" name="question" />
       <input type="hidden" name="user_id" value={{ user.id }} /> 
@@ -37,41 +29,26 @@
     <ul>
       {% for question in latest_question_list %}
       <li>
-        <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
+        <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }} <small>(ID: {{ question.id }})</small></a>
         {% if user == question.user %}  
-          <a href="{% url 'polls:delete' question.id %}">Delete</a>
-          <!-- Fix to the flaw 2
-           <form action="{% url 'polls:flaw_one_delete_fix' question.id %}" method="POST" style="display: inline;">
+          <!-- ============================= -->
+          <!-- FLAW 2: CSRF / unsafe DELETE -->
+          <!-- ============================= -->
+          <a href="{% url 'polls:delete' question.id %}">Delete</a><!-- When implementing fix to the flaw 2 comment this hyperlink -->
+
+          <!-- ============================= -->
+          <!-- FIX 2: POST + CSRF protection, uncomment the form below -->
+          <!-- ============================= -->      
+          <!-- <form action="{% url 'polls:delete' question.id %}" method="POST" style="display: inline;">
             {% csrf_token %}
             <button type="submit">Delete</button>
           </form>
-          -->
+          --> 
         {% endif %}
       </li>
       {% endfor %}
     </ul>
     {% else %}
-    <p>No polls are available.</p>
-    {% endif %}
-
-    <!-- 
-    <h4>List of questions: (Flaw 1 fix)</h4>
-    {% if latest_question_list %}
-    <ul>
-      {% for question in latest_question_list %}
-      <li>
-        <a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a>
-        {% if user == question.user %}  
-          <form action="{% url 'polls:flaw_one_delete_fix' question.id %}" method="POST" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit">Delete</button>
-          </form>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-    {% else %} -->
-
     <p>No polls are available.</p>
     {% endif %}
   </body>

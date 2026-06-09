@@ -21,6 +21,5 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('polls.urls')),
-    path('login/', LoginView.as_view(template_name='polls/login.html')),
     path('logout/', LogoutView.as_view(next_page='/')),
 ]
