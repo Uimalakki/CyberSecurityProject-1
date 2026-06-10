@@ -23,14 +23,15 @@
       {% endfor %}
       <input type="submit" value="Vote" />
     </form>
-
-    <h5>Add new choice:</h5>
-    <form action="" method="post">
-      {% csrf_token %}
-      <input type="text" name="new_choice" />
-      <input type="submit" value="Add" />
-      <input type="hidden" name="question_id" value="{{ question.id }}" />
-    </form>
+    {% if user == question.user %} 
+      <h5>Add new choice:</h5>
+      <form action="{% url 'polls:add_choice' question.id %}" method="post">
+        {% csrf_token %}
+        <input type="text" name="new_choice" />
+        <input type="submit" value="Add" />
+        <input type="hidden" name="question_id" value="{{ question.id }}" />
+      </form>
+    {% endif %}
     <br /><a href="/">Return</a>
   </body>
 </html>

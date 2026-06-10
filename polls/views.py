@@ -62,7 +62,7 @@ def flaw_one_delete(request, question_id):
   Question.objects.get(id=question_id).delete() # comment this line when fix to flaw 1 is impelemented
   return redirect('polls:index') # comment this line when fix to flaw 1 is impelemented
 
-
+@login_required
 def add_question(request):
   if request.method == 'POST':
 
@@ -118,6 +118,7 @@ def add_new_user(request):
 
   return render(request, 'polls/register.html')
 
+@login_required
 def detail(request, question_id):
   try:
     question = Question.objects.get(pk=question_id)
@@ -125,10 +126,12 @@ def detail(request, question_id):
     raise Http404("Question does not exist")
   return render(request, 'polls/detail.html', {'question': question})
 
+@login_required
 def results(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
   return render(request, 'polls/results.html', {'question': question})
 
+@login_required
 def vote(request, question_id):
   question = get_object_or_404(Question, pk=question_id)
   try:
@@ -176,4 +179,19 @@ def login_user(request):
       {"error": "Invalid username or password"}
     )
   return render(request, 'polls/login.html')
+
+@login_required
+def add_choice(request, question_id):
+
+  if request.method == 'POST':
+
+    question = get_object_or_404(Question, pk=question_id)
+    choice = request.POST.get('new_choice')
+    
+    question.choice_set.create(choice_text=choice, votes=0) # type: ignore
+    
+    return HttpResponseRedirect(reverse('polls:results', args=(question_id,)))
+
+  return render(request, 'polls:results')
+
   

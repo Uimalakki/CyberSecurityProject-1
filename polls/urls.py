@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import index, login_user, results, detail, vote, flaw_one_delete, add_question, add_new_user
+from .views import index, login_user, results, detail, vote, flaw_one_delete, add_question, add_new_user, add_choice
 
 app_name = 'polls'
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
   path('<int:question_id>/vote/', vote, name='vote'),
   path('<int:question_id>/delete/', flaw_one_delete, name='delete'),
   path('register/', add_new_user, name='register'),
+  path('<int:question_id>/add_choice/', add_choice, name='add_choice')
 ]
