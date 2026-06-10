@@ -68,9 +68,9 @@ def add_question(request):
 
     question = request.POST.get("question")
     # =============================
-    # Flaw 3: SQL Injection
+    # Fix to the flaw 3: SQL Injection
     # ============================= 
-    # Comment lines from 83 to 94 when fix to the flaw 3 is implemented
+    # Comment lines from 75 to 86 when fix to the flaw 3 is implemented
 
     conn = sqlite3.connect('db.sqlite3')
     cursor = conn.cursor()
@@ -88,7 +88,7 @@ def add_question(request):
     # =============================
     # Fix to flaw 3
     # ============================= 
-    # uncomment the lines 101 and 102
+    # uncomment the lines 93 and 94
 
     # new_question = Question.objects.create(question_text=question, pub_date=timezone.now(), user=request.user)
     # new_question.save()
@@ -103,17 +103,14 @@ def add_new_user(request):
     if user_exists(username):
       return HttpResponseForbidden("Username already exists")
     # =============================
-    # Flaw 4: Identification and Authentication Failures
+    # Fix to the flaw 4: Identification and Authentication Failures
     # ============================= 
 
-    # =============================
-    # Fix to flaw 4
-    # ============================= 
-    # uncomment the lines 122 - 125
+    # uncomment the lines 111 - 114
 
-    #try:
+    # try:
     #  validate_password(password)
-    #except ValidationError as e:
+    # except ValidationError as e:
     #  return HttpResponseForbidden(", ".join(e.messages))
 
     User.objects.create_user(username=username, password=password)
@@ -157,9 +154,9 @@ def login_user(request):
     # =============================
     # Fix to flaw 5
     # ============================= 
-    # uncomment the lines 170 - 173
+    # uncomment the lines 159 - 162
 
-    # if not rate_limiter(key, limit=3, period=60):
+    # if not rate_limiter(key):
     #   return HttpResponseForbidden(
     #     "Too many login attempts. Try again later."
     #   )
