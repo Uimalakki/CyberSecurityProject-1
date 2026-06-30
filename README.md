@@ -1,4 +1,4 @@
-### Repo for MOOC course Cybersecurity project 1 assigment 
+### Repo for a MOOC course project 1 assigment 
 #### Construct a software with security flaws 
 
 Setting up: 
